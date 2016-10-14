@@ -6,20 +6,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.android.volley.toolbox.ImageLoader;
-import com.android.volley.toolbox.ImageLoader.ImageContainer;
-import com.android.volley.toolbox.ImageLoader.ImageListener;
+import com.android.volley.toolbox.NetworkImageView;
 
 import java.util.ArrayList;
 
 public class CardAdapter extends ArrayAdapter<RssItem> {
 
     static class ViewHolder {
-        ImageView imageView;
+        NetworkImageView imageView;
         TextView txtLineOne;
         Button btnGo;
     }
@@ -60,7 +56,7 @@ public class CardAdapter extends ArrayAdapter<RssItem> {
         if (convertView == null) {
             convertView = mLayoutInflater.inflate(R.layout.list_item, parent, false);
             vh = new ViewHolder();
-            vh.imageView = (ImageView)convertView.findViewById(R.id.image);
+            vh.imageView = (NetworkImageView)convertView.findViewById(R.id.image);
             vh.txtLineOne = (TextView) convertView.findViewById(R.id.txt_line1);
             vh.btnGo = (Button) convertView.findViewById(R.id.btn_go);
 
@@ -74,34 +70,13 @@ public class CardAdapter extends ArrayAdapter<RssItem> {
         final int backgroundIndex = position >= mBackgroundColors.size() ?
                 position % mBackgroundColors.size() : position;
 
-        //convertView.setBackgroundColor(mBackgroundColors.get(backgroundIndex));
 
-        //vh.txtLineOne.setHeightRatio(positionHeight);
+
         vh.txtLineOne.setText(getItem(position).getTitle());//getItem(position) + position);
         vh.txtLineOne.setBackgroundResource(mBackgroundColors.get(backgroundIndex));
 
-        vh.btnGo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View v) {
-                Toast.makeText(getContext(), "Button Clicked Position " +
-                        position, Toast.LENGTH_SHORT).show();
-            }
-        });
-
-
-        // リクエストのキャンセル処理
-        final ImageContainer imageContainer = (ImageContainer)vh.imageView.getTag();
-        if (imageContainer != null) {
-            imageContainer.cancelRequest();
-        }
-
         final String imageUrl = getItem(position).getImage();
-        final ImageListener listener = ImageLoader.getImageListener(vh.imageView,android.R.drawable.spinner_background,android.R.drawable.ic_dialog_alert);
-        if (imageUrl != null){
-            vh.imageView.setTag(((MainActivity)getContext()).getImageLoader().get(imageUrl, listener,1920,1080));
-        }
-
-
+        vh.imageView.setImageUrl(imageUrl, ((MainActivity)getContext()).getImageLoader());
 
         return convertView;
     }

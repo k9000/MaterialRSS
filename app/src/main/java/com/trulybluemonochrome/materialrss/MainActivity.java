@@ -52,6 +52,7 @@ public class MainActivity extends Activity
     }
 
 
+
     public void openChromeCustomTab(String url) {
         //String packageName = CustomTabsHelper.getPackageNameToUse(this);
         //tabsIntent.intent.setPackage(packageName);

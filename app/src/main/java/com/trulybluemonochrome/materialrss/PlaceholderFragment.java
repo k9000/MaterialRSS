@@ -14,6 +14,7 @@ import android.widget.ArrayAdapter;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+
 import com.etsy.android.grid.StaggeredGridView;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -142,20 +143,14 @@ public class PlaceholderFragment extends Fragment implements
             mAdapter = new CardAdapter(getActivity(), R.id.txt_line1);
         }
 
-
-        //         if (mData == null) {
-        //mData = SampleData.generateSampleData();
-        //       }
-
-//            for (String data : mData) {
-        //mAdapter.add(data);
-        //          }
-
         mGridView.setAdapter(mAdapter);
 
         doRequest("http://feed.rssad.jp/rss/engadget/rss");
-
-
+        doRequest("http://blog.livedoor.jp/bluejay01-review/index.rdf");
+        doRequest("http://jisakutech.com/feed");
+        doRequest("http://news.google.com/news?hl=ja&ned=us&ie=UTF-8&oe=UTF-8&output=rss&topic=ir");
+        doRequest("http://feeds.gizmodo.jp/rss/gizmodo/index.xml");
+        doRequest("http://feeds.lifehacker.jp/rss/lifehacker/index.xml");
     }
 
     @Override
@@ -166,7 +161,6 @@ public class PlaceholderFragment extends Fragment implements
     }
 
     public void doRequest(String url) {
-        //XMLRequest request = new XMLRequest(url,
         ((MainActivity)getActivity()).getRequestQueue().add(new XMLRequest(url,
                 new Response.Listener<InputStream>() {
 
