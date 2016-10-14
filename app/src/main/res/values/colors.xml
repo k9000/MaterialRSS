@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 色を定義-->
+    <color name="window_bg">#ebedf0</color>
+    <drawable name="window_bg">@color/window_bg</drawable>
+    <color name="primary">#40c4ff</color>
+    <drawable name="primary">@color/primary</drawable>
+    <color name="primary_dark">#00b0ff</color>
+    <drawable name="primary_dark">@color/primary_dark</drawable>
+    <color name="accent">#f0f0f0</color>
+    <drawable name="accent">@color/accent</drawable>
+
+    <color name="orange">#ffffdc7e</color>
+    <color name="grey">#ffd3d3d3</color>
+    <color name="green">#ff8dd304</color>
+    <color name="blue">#ff82e0ff</color>
+    <color name="yellow">#fffffbae</color>
+    <color name="red">#fff10800</color>
+
+    <color name="blue1">#b3e5fc</color>
+    <color name="blue2">#81d4fa</color>
+    <color name="blue3">#4fc3f7</color>
+    <color name="blue4">#29b6f6</color>
+    <color name="blue5">#03a9f4</color>
+    <color name="blue6">#039be5</color>
+    <color name="blue7">#0288d1</color>
+    <color name="blue8">#0277bd</color>
+    <color name="blue9">#01579b</color>
+
+    <color name="list_item_pressed">#1A000000</color>
+</resources>
