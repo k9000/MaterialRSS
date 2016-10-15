@@ -2,8 +2,9 @@ package com.trulybluemonochrome.materialrss;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.util.Xml;
 import android.view.LayoutInflater;
@@ -29,30 +30,20 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import uk.co.senab.actionbarpulltorefresh.library.ActionBarPullToRefresh;
-import uk.co.senab.actionbarpulltorefresh.library.DefaultHeaderTransformer;
-import uk.co.senab.actionbarpulltorefresh.library.PullToRefreshLayout;
-import uk.co.senab.actionbarpulltorefresh.library.listeners.OnRefreshListener;
-
 
 public class PlaceholderFragment extends Fragment implements
-        OnRefreshListener {
+        SwipeRefreshLayout.OnRefreshListener {
     /**
      * The fragment argument representing the section number for this
      * fragment.
      */
     private static final String ARG_SECTION_NUMBER = "section_number";
 
-    //private CardGridStaggeredArrayAdapter mCardArrayAdapter;
     private StaggeredGridView mGridView;
-    private boolean mHasRequestedMore;
-    //
-    // private SampleAdapter mAdapter;
     private ArrayAdapter mAdapter;
 
-    private ArrayList<String> mData;
-
-    private PullToRefreshLayout mPullToRefreshLayout;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private String mURL;
 
 
     /**
@@ -76,50 +67,31 @@ public class PlaceholderFragment extends Fragment implements
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         // Now give the find the PullToRefreshLayout and set it up
-        mPullToRefreshLayout = (PullToRefreshLayout) rootView.findViewById(R.id.ptr_layout);
-        ActionBarPullToRefresh.from(getActivity())
-                .allChildrenArePullable()
-                .listener(this)
-                .setup(mPullToRefreshLayout);
-        // Set title in Fragment for display purposes.
-        //TextView title = (TextView) rootView.findViewById(R.id.tv_title);
-        //Bundle b = getArguments();
-        //if (b != null) {
-        //    title.setText("text");
-        //}
+        mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.ptr_layout);
+        // 色設定
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.red,
+                R.color.green, R.color.blue,
+                R.color.orange);
+        // Listenerをセット
+        mSwipeRefreshLayout.setOnRefreshListener(this);
 
-        DefaultHeaderTransformer transformer = (DefaultHeaderTransformer) mPullToRefreshLayout
-                .getHeaderTransformer();
-        //transformer.getHeaderView().findViewById(R.id.ptr_text)
-        //        .setBackgroundColor(getResources().getColor(R.color.green));
-        transformer.setProgressBarColor(getResources().getColor(R.color.green));
+        mURL = getArguments().getString("URL", null);
 
         return rootView;
     }
 
-    @Override
-    public void onRefreshStarted(View view) {
-        /**
-         * Simulate Refresh with 4 seconds sleep
-         */
-        new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
 
+    @Override
+    public void onRefresh() {
+        // 更新処理を実装する
+        // ここでは単純に2秒後にインジケータ非表示
+        new Handler().postDelayed(new Runnable() {
             @Override
-            protected void onPostExecute(Void result) {
-                super.onPostExecute(result);
-                // Notify PullToRefreshLayout that the refresh has finished
-                mPullToRefreshLayout.setRefreshComplete();
+            public void run() {
+                // 更新が終了したらインジケータ非表示
+                mSwipeRefreshLayout.setRefreshing(false);
             }
-        }.execute();
+        }, 2000);
     }
 
     @Override
@@ -145,12 +117,8 @@ public class PlaceholderFragment extends Fragment implements
 
         mGridView.setAdapter(mAdapter);
 
-        doRequest("http://feed.rssad.jp/rss/engadget/rss");
-        doRequest("http://blog.livedoor.jp/bluejay01-review/index.rdf");
-        doRequest("http://jisakutech.com/feed");
-        doRequest("http://news.google.com/news?hl=ja&ned=us&ie=UTF-8&oe=UTF-8&output=rss&topic=ir");
-        doRequest("http://feeds.gizmodo.jp/rss/gizmodo/index.xml");
-        doRequest("http://feeds.lifehacker.jp/rss/lifehacker/index.xml");
+
+        doRequest(mURL);
     }
 
     @Override

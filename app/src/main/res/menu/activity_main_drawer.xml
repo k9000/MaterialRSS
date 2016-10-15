@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/section1"
+            android:icon="@mipmap/ic_launcher"
+            android:title="title_section1" />
+        <item
+            android:id="@+id/section2"
+            android:icon="@mipmap/ic_launcher"
+            android:title="title_section2" />
+        <item
+            android:id="@+id/section3"
+            android:icon="@mipmap/ic_launcher"
+            android:title="title_section3" />
+    </group>
+
+    <item android:title="Communicate">
+        <menu>
+            <item
+                android:id="@+id/nav_share"
+                android:icon="@mipmap/ic_launcher"
+                android:title="Share" />
+            <item
+                android:id="@+id/nav_send"
+                android:icon="@mipmap/ic_launcher"
+                android:title="Send" />
+        </menu>
+    </item>
+</menu>

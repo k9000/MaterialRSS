@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="android:Theme.Material">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="@android:windowBackground">@drawable/window_bg</item>
         <item name="@android:colorBackground">@color/window_bg</item>
@@ -16,6 +16,9 @@
         <!--   theme UI controls like checkboxes and text fields -->
         <item name="android:colorAccent">@color/accent</item>
 
-    </style>
+        <!-- ToolBarの背景色 -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
 
+    </style>
 </resources>
