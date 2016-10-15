@@ -8,14 +8,14 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.android.volley.toolbox.NetworkImageView;
+//import com.android.volley.toolbox.NetworkImageView;
 
 import java.util.ArrayList;
 
 public class CardAdapter extends ArrayAdapter<RssItem> {
 
     static class ViewHolder {
-        NetworkImageView imageView;
+        LiteNetworkImageView imageView;
         TextView txtLineOne;
         Button btnGo;
     }
@@ -56,7 +56,7 @@ public class CardAdapter extends ArrayAdapter<RssItem> {
         if (convertView == null) {
             convertView = mLayoutInflater.inflate(R.layout.list_item, parent, false);
             vh = new ViewHolder();
-            vh.imageView = (NetworkImageView)convertView.findViewById(R.id.image);
+            vh.imageView = (LiteNetworkImageView)convertView.findViewById(R.id.image);
             vh.txtLineOne = (TextView) convertView.findViewById(R.id.txt_line1);
             vh.btnGo = (Button) convertView.findViewById(R.id.btn_go);
 

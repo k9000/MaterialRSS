@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-        <com.android.volley.toolbox.NetworkImageView
+        <com.trulybluemonochrome.materialrss.LiteNetworkImageView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/image"
