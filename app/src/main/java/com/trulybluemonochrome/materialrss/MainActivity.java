@@ -3,6 +3,7 @@ package com.trulybluemonochrome.materialrss;
 import android.os.Bundle;
 import android.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.net.Uri;
@@ -19,8 +20,13 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.widget.ExpandableListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -29,6 +35,11 @@ public class MainActivity extends AppCompatActivity {
     private CustomTabsIntent mTabsIntent = new CustomTabsIntent.Builder().build();
     private RequestQueue mQueue;
     private ImageLoader mImageLoader;
+
+    private DrawerLayout mDrawerLayout;
+    ExpandableListAdapter mMenuAdapter;
+    List<ExpandedMenuModel> listDataHeader;
+    HashMap<ExpandedMenuModel, List<String>> listDataChild;
 
 
     @Override
@@ -40,56 +51,110 @@ public class MainActivity extends AppCompatActivity {
 
         setSupportActionBar(toolbar);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.openDrawer(GravityCompat.START);
-
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerLayout.openDrawer(GravityCompat.START);
+        ExpandableListView expandableList = (ExpandableListView) findViewById(R.id.navigationmenu);
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        View header=navigationView.getHeaderView(0);
 
-        Menu menuNav = navigationView.getMenu();
-        menuNav.findItem(R.id.section1).setTitle("Engadget");
-        menuNav.findItem(R.id.section2).setTitle("GIZMODE");
-        menuNav.findItem(R.id.section3).setTitle("Lifehacker");
+        if (navigationView != null) {
+            setupDrawerContent(navigationView);
+        }
 
-        mTabsIntent = new CustomTabsIntent.Builder().build();
-        mQueue = Volley.newRequestQueue(this);
-        mImageLoader = new ImageLoader(mQueue, new LruImageCache());
+        prepareListData();
+        mMenuAdapter = new ExpandableListAdapter(this, listDataHeader, listDataChild, expandableList);
 
-        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+        // setting list adapter
+        expandableList.setAdapter(mMenuAdapter);
+
+        expandableList.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
-            public boolean onNavigationItemSelected(MenuItem menuItem) {
-                Bundle bundle = new Bundle();
-
-                switch (menuItem.getItemId()) {
-                    case R.id.section1:
-                        bundle.putString("URL", "http://feed.rssad.jp/rss/engadget/rss");
-                        break;
-                    case R.id.section2:
-                        bundle.putString("URL", "http://feeds.gizmodo.jp/rss/gizmodo/index.xml");
-                        break;
-                    case R.id.section3:
-                        bundle.putString("URL", "http://feeds.lifehacker.jp/rss/lifehacker/index.xml");
-                        break;
-                    default:
-                        break;
+            public boolean onChildClick(ExpandableListView expandableListView, View view, int i, int i1, long l) {
+                Log.d("DEBUG", "submenu item clicked");
+                if (i==1){
+                    Bundle bundle = new Bundle();
+                    switch (i1) {
+                        case 0:
+                            bundle.putString("URL", "http://feed.rssad.jp/rss/engadget/rss");
+                            break;
+                        case 1:
+                            bundle.putString("URL", "http://feeds.gizmodo.jp/rss/gizmodo/index.xml");
+                            break;
+                        case 2:
+                            bundle.putString("URL", "http://feeds.lifehacker.jp/rss/lifehacker/index.xml");
+                            break;
+                        default:
+                            break;
+                    }
+                    PlaceholderFragment fragment = new PlaceholderFragment();
+                    fragment.setArguments(bundle);
+                    getFragmentManager().beginTransaction()
+                            .replace(R.id.container, fragment)
+                            .commit();
                 }
-                /*
-                FragmentManager fragmentManager = getFragmentManager();
-                fragmentManager.beginTransaction()
-                        .replace(R.id.container, PlaceholderFragment.newInstance( 1))
-                        .commit();
-*/
-                PlaceholderFragment fragment = new PlaceholderFragment();
-                fragment.setArguments(bundle);
-                getFragmentManager().beginTransaction()
-                        .replace(R.id.container, fragment)
-                        .commit();
+
+                return false;
+            }
+        });
+        expandableList.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
+            @Override
+            public boolean onGroupClick(ExpandableListView expandableListView, View view, int i, long l) {
+                //Log.d("DEBUG", "heading clicked");
                 return false;
             }
         });
 
+        mTabsIntent = new CustomTabsIntent.Builder().build();
+        mQueue = Volley.newRequestQueue(this);
+        mImageLoader = new ImageLoader(mQueue, new LruImageCache());
+    }
+
+    private void prepareListData() {
+        listDataHeader = new ArrayList<ExpandedMenuModel>();
+        listDataChild = new HashMap<ExpandedMenuModel, List<String>>();
+
+        ExpandedMenuModel item1 = new ExpandedMenuModel();
+        item1.setIconName("Folder1");
+        item1.setIconImg(R.mipmap.ic_launcher);
+        // Adding data header
+        listDataHeader.add(item1);
+
+        ExpandedMenuModel item2 = new ExpandedMenuModel();
+        item2.setIconName("Folder2");
+        item2.setIconImg(R.mipmap.ic_launcher);
+        listDataHeader.add(item2);
+
+        ExpandedMenuModel item3 = new ExpandedMenuModel();
+        item3.setIconName("Folder3");
+        item3.setIconImg(R.mipmap.ic_launcher);
+        listDataHeader.add(item3);
+
+        // Adding child data
+        List<String> heading1 = new ArrayList<String>();
+        heading1.add("工事中...");
+
+        List<String> heading2 = new ArrayList<String>();
+        heading2.add("Engadget");
+        heading2.add("GIZMODE");
+        heading2.add("Lifehacker");
+
+        listDataChild.put(listDataHeader.get(0), heading1);// Header, Child data
+        listDataChild.put(listDataHeader.get(1), heading2);
 
     }
+
+    private void setupDrawerContent(NavigationView navigationView) {
+        //revision: this don't works, use setOnChildClickListener() and setOnGroupClickListener() above instead
+        navigationView.setNavigationItemSelectedListener(
+                new NavigationView.OnNavigationItemSelectedListener() {
+                    @Override
+                    public boolean onNavigationItemSelected(MenuItem menuItem) {
+                        menuItem.setChecked(true);
+                        mDrawerLayout.closeDrawers();
+                        return true;
+                    }
+                });
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
