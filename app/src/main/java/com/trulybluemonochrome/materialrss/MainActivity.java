@@ -1,14 +1,11 @@
 package com.trulybluemonochrome.materialrss;
 
+import android.app.Activity;
 import android.os.Bundle;
-import android.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.net.Uri;
-
-import android.support.customtabs.CustomTabsIntent;
 
 
 import com.android.volley.RequestQueue;
@@ -21,7 +18,6 @@ import android.support.v4.view.GravityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.widget.ExpandableListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -29,10 +25,9 @@ import java.util.HashMap;
 import java.util.List;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
     private CharSequence mTitle;
-    private CustomTabsIntent mTabsIntent = new CustomTabsIntent.Builder().build();
     private RequestQueue mQueue;
     private ImageLoader mImageLoader;
 
@@ -46,10 +41,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-
-        setSupportActionBar(toolbar);
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerLayout.openDrawer(GravityCompat.START);
@@ -103,7 +94,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mTabsIntent = new CustomTabsIntent.Builder().build();
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle(R.string.app_name);
+        toolbar.setNavigationIcon(R.drawable.ic_drawer);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDrawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
+
         mQueue = Volley.newRequestQueue(this);
         mImageLoader = new ImageLoader(mQueue, new LruImageCache());
     }
@@ -190,12 +190,6 @@ public class MainActivity extends AppCompatActivity {
                 mTitle = getString(R.string.title_section3);
                 break;
         }
-    }
-
-    public void openChromeCustomTab(String url) {
-        //String packageName = CustomTabsHelper.getPackageNameToUse(this);
-        //tabsIntent.intent.setPackage(packageName);
-        mTabsIntent.launchUrl(this, Uri.parse(url));
     }
 
     @Override

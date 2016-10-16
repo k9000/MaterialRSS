@@ -2,8 +2,12 @@ package com.trulybluemonochrome.materialrss;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.customtabs.CustomTabsIntent;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.util.Xml;
@@ -104,7 +108,16 @@ public class PlaceholderFragment extends Fragment implements
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 final String url = ((RssItem)parent.getItemAtPosition(position)).getUrl();
-                ((MainActivity)getActivity()).openChromeCustomTab(url);
+                //((MainActivity)getActivity()).openChromeCustomTab(url);
+                final CustomTabsIntent tabsIntent = new CustomTabsIntent.Builder()
+                        .setShowTitle(true)
+                        .setToolbarColor(ContextCompat.getColor(getActivity(), R.color.primary))
+                        .setStartAnimations(getActivity(), R.anim.slide_in_right, R.anim.slide_out_left)
+                        .setExitAnimations(getActivity(), android.R.anim.slide_in_left, android.R.anim.slide_out_right)
+                        .build();
+
+// Chromeの起動
+                tabsIntent.launchUrl(getActivity(), Uri.parse(url));
             }
 
         });
