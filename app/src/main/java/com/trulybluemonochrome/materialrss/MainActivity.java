@@ -1,6 +1,7 @@
 package com.trulybluemonochrome.materialrss;
 
 import android.app.Activity;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -13,14 +14,12 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v7.widget.Toolbar;
 import android.widget.ExpandableListView;
+import android.widget.SimpleCursorTreeAdapter;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 
 public class MainActivity extends Activity {
@@ -30,11 +29,9 @@ public class MainActivity extends Activity {
     private ImageLoader mImageLoader;
 
     private DrawerLayout mDrawerLayout;
-    ExpandableListAdapter mMenuAdapter;
-    List<String> listDataHeader;
-    HashMap<String, List<String>> listDataChild;
+    private MyExpandableListAdapter mMenuAdapter;
+    private MySQLiteOpenHelper mHlpr;
     static SQLiteDatabase mydb;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,37 +47,37 @@ public class MainActivity extends Activity {
             setupDrawerContent(navigationView);
         }
 
-        prepareListData();
-        mMenuAdapter = new ExpandableListAdapter(this, listDataHeader, listDataChild, expandableList);
+        mHlpr = new MySQLiteOpenHelper(getApplicationContext());
+        mydb = mHlpr.getReadableDatabase();
 
-        // setting list adapter
+
+        Cursor cursor = mydb.query("folder", new String[] {"_id", "category"}, null, null, null, null, "_id DESC");
+
+        mMenuAdapter = new MyExpandableListAdapter(
+                this, cursor,
+                android.R.layout.simple_expandable_list_item_1,
+                new String[] { "category" },
+                new int[] { android.R.id.text1 },
+                android.R.layout.simple_expandable_list_item_1,
+                new String[] { "title" },
+                new int[] { android.R.id.text1 });
+        startManagingCursor(cursor);
+
         expandableList.setAdapter(mMenuAdapter);
 
         expandableList.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
             public boolean onChildClick(ExpandableListView expandableListView, View view, int i, int i1, long l) {
                 Log.d("DEBUG", "submenu item clicked");
-                if (i==1){
-                    Bundle bundle = new Bundle();
-                    switch (i1) {
-                        case 0:
-                            bundle.putString("URL", "http://feed.rssad.jp/rss/engadget/rss");
-                            break;
-                        case 1:
-                            bundle.putString("URL", "http://feeds.gizmodo.jp/rss/gizmodo/index.xml");
-                            break;
-                        case 2:
-                            bundle.putString("URL", "http://feeds.lifehacker.jp/rss/lifehacker/index.xml");
-                            break;
-                        default:
-                            break;
-                    }
-                    PlaceholderFragment fragment = new PlaceholderFragment();
-                    fragment.setArguments(bundle);
-                    getFragmentManager().beginTransaction()
-                            .replace(R.id.container, fragment)
-                            .commit();
-                }
+                Bundle bundle = new Bundle();
+                Cursor cursor =mydb.query("feeds", new String[] {"_id", "category", "title", "url"},  "_id = ?", new String[]{ String.valueOf(l) }, null, null, "_id DESC");
+                cursor.moveToFirst();
+                bundle.putString("URL", cursor.getString(cursor.getColumnIndex("url")));
+                PlaceholderFragment fragment = new PlaceholderFragment();
+                fragment.setArguments(bundle);
+                getFragmentManager().beginTransaction()
+                        .replace(R.id.container, fragment)
+                        .commit();
 
                 return false;
             }
@@ -107,26 +104,21 @@ public class MainActivity extends Activity {
         mImageLoader = new ImageLoader(mQueue, new LruImageCache());
     }
 
-    private void prepareListData() {
+    public class MyExpandableListAdapter extends SimpleCursorTreeAdapter {
 
-        listDataHeader = new ArrayList<String>();
-        listDataChild = new HashMap<String, List<String>>();
+        public MyExpandableListAdapter(Context context, Cursor cur,
+                                int groupLayout, String[] groupFrom, int[] groupTo,
+                                int childLayout, String[] childrenFrom, int[] childrenTo) {
+            super(context, cur, groupLayout, groupFrom, groupTo,
+                    childLayout, childrenFrom, childrenTo);
+        }
 
-        listDataHeader.add("Folder1");
-        listDataHeader.add("Folder2");
-        listDataHeader.add("Folder3");
-
-        // Adding child data
-        List<String> heading1 = new ArrayList<String>();
-        heading1.add("工事中...");
-
-        List<String> heading2 = new ArrayList<String>();
-        heading2.add("Engadget");
-        heading2.add("GIZMODE");
-        heading2.add("Lifehacker");
-
-        listDataChild.put(listDataHeader.get(0), heading1);// Header, Child data
-        listDataChild.put(listDataHeader.get(1), heading2);
+        @Override
+        protected Cursor getChildrenCursor(Cursor groupCursor) {
+            //String folder = mHlpr.getFolderString(groupCursor, Music.ALBUM);
+            Cursor cur = mydb.query("feeds", new String[] {"_id", "category", "title", "url"},  "category = ?", new String[]{ groupCursor.getString(groupCursor.getColumnIndex("category")) }, null, null, "_id DESC");;
+            return cur;
+        }
 
     }
 
@@ -204,6 +196,7 @@ public class MainActivity extends Activity {
     public ImageLoader getImageLoader() {
         return mImageLoader;
     }
+
 
 }
 
