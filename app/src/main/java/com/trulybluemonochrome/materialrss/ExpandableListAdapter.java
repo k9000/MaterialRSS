@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListView;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.HashMap;
@@ -17,13 +16,13 @@ import java.util.List;
 
 public class ExpandableListAdapter extends BaseExpandableListAdapter {
     private Context mContext;
-    private List<ExpandedMenuModel> mListDataHeader; // header titles
+    private List<String> mListDataHeader; // header titles
 
     // child data in format of header title, child title
-    private HashMap<ExpandedMenuModel, List<String>> mListDataChild;
+    private HashMap<String, List<String>> mListDataChild;
     ExpandableListView expandList;
 
-    public ExpandableListAdapter(Context context, List<ExpandedMenuModel> listDataHeader, HashMap<ExpandedMenuModel, List<String>> listChildData, ExpandableListView mView) {
+    public ExpandableListAdapter(Context context, List<String> listDataHeader, HashMap<String, List<String>> listChildData, ExpandableListView mView) {
         this.mContext = context;
         this.mListDataHeader = listDataHeader;
         this.mListDataChild = listChildData;
@@ -77,7 +76,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
     @Override
     public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
-        ExpandedMenuModel headerTitle = (ExpandedMenuModel) getGroup(groupPosition);
+        String headerTitle = (String) getGroup(groupPosition);
         if (convertView == null) {
             LayoutInflater infalInflater = (LayoutInflater) this.mContext
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -85,10 +84,8 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
         }
         TextView lblListHeader = (TextView) convertView
                 .findViewById(R.id.submenu);
-        ImageView headerIcon = (ImageView) convertView.findViewById(R.id.iconimage);
         lblListHeader.setTypeface(null, Typeface.BOLD);
-        lblListHeader.setText(headerTitle.getIconName());
-        headerIcon.setImageResource(headerTitle.getIconImg());
+        lblListHeader.setText(headerTitle);
         return convertView;
     }
 

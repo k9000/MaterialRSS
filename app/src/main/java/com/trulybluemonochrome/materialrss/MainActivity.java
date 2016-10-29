@@ -1,24 +1,22 @@
 package com.trulybluemonochrome.materialrss;
 
 import android.app.Activity;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-
+import android.view.View;
+import android.support.design.widget.NavigationView;
+import android.support.v4.view.GravityCompat;
+import android.support.v7.widget.Toolbar;
+import android.widget.ExpandableListView;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
-
-import android.view.View;
-import android.support.design.widget.NavigationView;
-import android.support.v4.view.GravityCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.widget.ExpandableListView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,8 +31,9 @@ public class MainActivity extends Activity {
 
     private DrawerLayout mDrawerLayout;
     ExpandableListAdapter mMenuAdapter;
-    List<ExpandedMenuModel> listDataHeader;
-    HashMap<ExpandedMenuModel, List<String>> listDataChild;
+    List<String> listDataHeader;
+    HashMap<String, List<String>> listDataChild;
+    static SQLiteDatabase mydb;
 
 
     @Override
@@ -109,24 +108,13 @@ public class MainActivity extends Activity {
     }
 
     private void prepareListData() {
-        listDataHeader = new ArrayList<ExpandedMenuModel>();
-        listDataChild = new HashMap<ExpandedMenuModel, List<String>>();
 
-        ExpandedMenuModel item1 = new ExpandedMenuModel();
-        item1.setIconName("Folder1");
-        item1.setIconImg(R.mipmap.ic_launcher);
-        // Adding data header
-        listDataHeader.add(item1);
+        listDataHeader = new ArrayList<String>();
+        listDataChild = new HashMap<String, List<String>>();
 
-        ExpandedMenuModel item2 = new ExpandedMenuModel();
-        item2.setIconName("Folder2");
-        item2.setIconImg(R.mipmap.ic_launcher);
-        listDataHeader.add(item2);
-
-        ExpandedMenuModel item3 = new ExpandedMenuModel();
-        item3.setIconName("Folder3");
-        item3.setIconImg(R.mipmap.ic_launcher);
-        listDataHeader.add(item3);
+        listDataHeader.add("Folder1");
+        listDataHeader.add("Folder2");
+        listDataHeader.add("Folder3");
 
         // Adding child data
         List<String> heading1 = new ArrayList<String>();
