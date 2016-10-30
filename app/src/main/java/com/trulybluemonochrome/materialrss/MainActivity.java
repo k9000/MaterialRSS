@@ -31,7 +31,7 @@ public class MainActivity extends Activity {
     private DrawerLayout mDrawerLayout;
     private MyExpandableListAdapter mMenuAdapter;
     private MySQLiteOpenHelper mHlpr;
-    static SQLiteDatabase mydb;
+    private SQLiteDatabase mydb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
