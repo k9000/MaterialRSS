@@ -21,6 +21,7 @@ import com.etsy.android.grid.StaggeredGridView;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Locale;
 
 
 public class PlaceholderFragment extends Fragment implements
@@ -127,7 +128,7 @@ public class PlaceholderFragment extends Fragment implements
             _obj.setPage(c.getString(c.getColumnIndex("page")));
             _obj.setImage(c.getString(c.getColumnIndex("image")));
             try {
-                _obj.setDate(new SimpleDateFormat("YYYY-MM-DD HH:MM:SS").parse(c.getString(c.getColumnIndex("date"))));
+                _obj.setDate(new SimpleDateFormat("yyyy-MM-DD HH:mm:ss", Locale.ENGLISH).parse(c.getString(c.getColumnIndex("date"))));
             } catch (Exception e){
                 e.printStackTrace();
             }

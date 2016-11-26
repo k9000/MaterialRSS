@@ -273,13 +273,13 @@ public class MainActivity extends Activity {
                                         "(&#....;|&....;|&...;)", "")));// タグ除去;
                                 //Log.d("title", currentItem.getTitle());
                             } else if (tag.equals("pubDate")) {
-                                values.put("date",new SimpleDateFormat("YYYY-MM-DD HH:MM:SS").format(new SimpleDateFormat(
+                                values.put("date",(new SimpleDateFormat("yyyy-MM-DD HH:mm:ss",Locale.ENGLISH)).format(new SimpleDateFormat(
                                         "EEE, dd MMM yyyy HH:mm:ss Z",
                                         Locale.ENGLISH).parse(parser.nextText())));
                             } else if (tag.equals("date")
                                     || tag.equals("published")) {
-                                values.put("date",new SimpleDateFormat("YYYY-MM-DD HH:MM:SS").format(new SimpleDateFormat(
-                                        "yyyy-MM-dd'T'HH:mm:ss").parse(parser
+                                values.put("date",(new SimpleDateFormat("yyyy-MM-DD HH:mm:ss",Locale.ENGLISH)).format(new SimpleDateFormat(
+                                        "yyyy-MM-dd'T'HH:mm:ss",Locale.ENGLISH).parse(parser
                                         .nextText())));
                             } else if (tag.equals("link")) {
                                 final String link = parser.nextText();
