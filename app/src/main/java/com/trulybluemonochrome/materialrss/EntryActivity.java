@@ -415,14 +415,13 @@ public class EntryActivity extends Activity implements View.OnClickListener {
                             currentItem = new RssItem();
                         } else if (currentItem != null) {
                             if (tag.equals("link")) {
-                                String rel = parser.getAttributeValue(null, "rel");
-                                String type = parser
+                                final String rel = parser.getAttributeValue(null, "rel");
+                                final String type = parser
                                         .getAttributeValue(null, "type");
-                                String herf = parser
+                                final String herf = parser
                                         .getAttributeValue(null, "href");
                                 if (rel.equals("alternate")
-                                        && (type.equals("application/rss+xml") || type
-                                        .equals("application/atom+xml"))) {
+                                        && ("application/rss+xml").equals(type) || ("application/atom+xml").equals(type)) {
                                     return "http:" + herf.replaceAll("http:", "");
                                     //currentItem.setUrl(herf);
                                     //list.add(currentItem);
