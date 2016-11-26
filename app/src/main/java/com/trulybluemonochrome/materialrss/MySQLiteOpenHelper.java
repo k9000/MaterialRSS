@@ -13,6 +13,7 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
     public static final String CREATE_CATEGORY_TABLE = "create table folder ( _id integer primary key autoincrement, category integer not null );";
     public static final String INSERT_DEFAULT_VALUE = "insert into folder values(null, 'Default');";
     public static final String CREATE_FEEDS_TABLE = "create table feeds ( _id integer primary key autoincrement, category category not null, title integer not null, url integer not null );";
+    public static final String CREATE_ENTRY_TABLE = "create table entry ( _id integer primary key autoincrement, title integer not null, url integer unique, text integer, page integer, image integer, date integer not null );";
     public static final String DROP_TABLE = "drop table mytable;";
 
     public MySQLiteOpenHelper(Context c) {
@@ -22,6 +23,7 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_CATEGORY_TABLE);
         db.execSQL(INSERT_DEFAULT_VALUE);
         db.execSQL(CREATE_FEEDS_TABLE);
+        db.execSQL(CREATE_ENTRY_TABLE);
     }
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL(DROP_TABLE);

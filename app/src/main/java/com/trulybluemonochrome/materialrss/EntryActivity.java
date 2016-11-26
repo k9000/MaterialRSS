@@ -89,10 +89,10 @@ public class EntryActivity extends Activity implements View.OnClickListener {
             @Override
             public HttpResponse performRequest(Request<?> request, Map<String, String> additionalHeaders)
                     throws IOException, AuthFailureError {
-                Map newHeaders = new HashMap();
+                final Map newHeaders = new HashMap();
                 newHeaders.putAll(additionalHeaders);
                 newHeaders.put("User-Agent", "Desktop");
-                HttpResponse response = super.performRequest(request, newHeaders);
+                final HttpResponse response = super.performRequest(request, newHeaders);
                 return response;
             }
         });
@@ -184,11 +184,12 @@ public class EntryActivity extends Activity implements View.OnClickListener {
         switch (v.getId()) {
             case R.id.regist_button:
                 if (mPass) {// 認証クリア
-                    ContentValues values = new ContentValues();
+                    final ContentValues values = new ContentValues();
                     values.put("category", ((Cursor)mSpinner.getSelectedItem()).getString(mColumnIndex));
                     values.put("title", mTitleView.getText().toString());
                     values.put("url", mUriView.getText().toString());
                     mydb.insert("feeds", null, values);
+                    mydb.close();
 
                     //Cursor cursor = mydb.query("feeds", new String[] {"_id", "category", "title", "url"}, null, null, null, null, "_id DESC");
                     //startManagingCursor(cursor);

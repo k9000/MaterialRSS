@@ -3,6 +3,7 @@ package com.trulybluemonochrome.materialrss;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -14,6 +15,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.util.Log;
+import android.util.Xml;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,9 +27,21 @@ import android.widget.ExpandableListView;
 import android.widget.SimpleCursorTreeAdapter;
 
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
 
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class MainActivity extends Activity {
@@ -74,6 +88,8 @@ public class MainActivity extends Activity {
                 new int[] { android.R.id.text1 });
         //startManagingCursor(cursor);
 
+        //cursor.close();
+
         expandableList.setAdapter(menuAdapter);
         expandableList.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
@@ -81,33 +97,6 @@ public class MainActivity extends Activity {
                 mFoldername=cursor.getString(cursor.getColumnIndex("category"));
                 adapter.notifyDataSetChanged();
                 viewPager.setCurrentItem(i1);
-                /*
-                final Cursor cursor =mydb.query("feeds", new String[] {"_id", "category", "title", "url"},  "_id = ?", new String[]{ String.valueOf(l) }, null, null, "_id DESC");
-                cursor.moveToFirst();
-                final String foldername = cursor.getString(cursor.getColumnIndex("category"));
-                if (mFoldername==foldername){
-                    viewPager.setCurrentItem(i1);
-                } else {
-                    mFoldername = foldername;
-                    adapter.destroyAllItem(viewPager);
-                    //adapter.setResource(resources);
-                    adapter.notifyDataSetChanged();
-                    viewPager.setAdapter(adapter);
-                    viewPager.setCurrentItem(i1);
-                }*/
-
-
-
-                /*
-                final Bundle bundle = new Bundle();
-                final Cursor cursor =mydb.query("feeds", new String[] {"_id", "category", "title", "url"},  "_id = ?", new String[]{ String.valueOf(l) }, null, null, "_id DESC");
-                cursor.moveToFirst();
-                bundle.putString("URL", cursor.getString(cursor.getColumnIndex("url")));
-                PlaceholderFragment fragment = new PlaceholderFragment();
-                fragment.setArguments(bundle);
-                getFragmentManager().beginTransaction()
-                        .replace(R.id.container, fragment)
-                        .commit();*/
                 return false;
             }
         });
@@ -143,6 +132,14 @@ public class MainActivity extends Activity {
 
         mQueue = Volley.newRequestQueue(this);
         mImageLoader = new ImageLoader(mQueue, new LruImageCache());
+
+        final Cursor feedcursor = mydb.query("feeds", null, null, null, null, null, "_id DESC");
+        //feedcursor.moveToFirst();
+        while(feedcursor.moveToNext()){
+            doRequest(feedcursor.getString(feedcursor.getColumnIndex("url")));
+        }
+        feedcursor.close();
+        //adapter.notifyDataSetChanged();
     }
 
     public class MyExpandableListAdapter extends SimpleCursorTreeAdapter {
@@ -183,21 +180,7 @@ public class MainActivity extends Activity {
 
         return super.onOptionsItemSelected(item);
     }
-/*
-    public void onSectionAttached(int number) {
-        switch (number) {
-            case 1:
-                mTitle = getString(R.string.title_section1);
-                break;
-            case 2:
-                mTitle = getString(R.string.title_section2);
-                break;
-            case 3:
-                mTitle = getString(R.string.title_section3);
-                break;
-        }
-    }
-*/
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -214,6 +197,165 @@ public class MainActivity extends Activity {
         }
     }
 
+    public void doRequest(final String url) {
+        mQueue.add(new XMLRequest(url,
+                new Response.Listener<InputStream>() {
+                    @Override
+                    public void onResponse(InputStream in) {
+                        try {
+                            parseXml(in, url);
+/*
+
+                            mAdapter.addAll(rsslist);
+                            mAdapter.sort(new Comparator<RssItem>() {
+                                @Override
+                                public int compare(RssItem lhs, RssItem rhs) {
+                                    if (lhs.getDate() == null)
+                                        return 1;
+                                    else if (rhs.getDate() == null)
+                                        return -1;
+                                    else if (lhs.getDate().before(rhs.getDate()))
+                                        return 1;
+                                    else
+                                        return -1;
+                                }
+                            });
+                            //mAdapter.addAll(rsslist);
+                            mGridView.setAdapter(mAdapter);
+
+*/
+
+
+                            in.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (XmlPullParserException e) {
+                            e.printStackTrace();
+                        }
+                        //if (mListener != null) {
+                        //    mListener.onParseXml(data);
+                        //}
+                    }
+                }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // error
+            }
+        }));
+
+        //MAINApplication.getRequestQueue().add(request);
+    }
+
+    public void parseXml(final InputStream is, String page
+    ) throws IOException,
+            XmlPullParserException {
+        //final ArrayList<RssItem> list = new ArrayList<RssItem>();
+        final XmlPullParser parser = Xml.newPullParser();
+        try {
+            parser.setInput(is, null);
+            int eventType = parser.getEventType();
+            //RssItem currentItem = null;
+            ContentValues values = null;
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                String tag = null;
+                switch (eventType) {
+                    case XmlPullParser.START_TAG:
+                        tag = parser.getName();
+                        if (tag.equals("item") || tag.equals("entry")) {
+                            values = new ContentValues();
+                            //currentItem.setTag(color);
+                            //currentItem.setPage(page);
+                            values.put("page",page);
+                        } else if (values != null) {
+                            if (tag.equals("title")) {
+                                values.put("title",(parser.nextText().replaceAll(
+                                        "(&#....;|&....;|&...;)", "")));// タグ除去;
+                                //Log.d("title", currentItem.getTitle());
+                            } else if (tag.equals("pubDate")) {
+                                values.put("date",new SimpleDateFormat("YYYY-MM-DD HH:MM:SS").format(new SimpleDateFormat(
+                                        "EEE, dd MMM yyyy HH:mm:ss Z",
+                                        Locale.ENGLISH).parse(parser.nextText())));
+                            } else if (tag.equals("date")
+                                    || tag.equals("published")) {
+                                values.put("date",new SimpleDateFormat("YYYY-MM-DD HH:MM:SS").format(new SimpleDateFormat(
+                                        "yyyy-MM-dd'T'HH:mm:ss").parse(parser
+                                        .nextText())));
+                            } else if (tag.equals("link")) {
+                                final String link = parser.nextText();
+                                if (link != "") {
+                                    values.put("url",(link));
+                                } else {
+                                    final String rel = parser.getAttributeValue(
+                                            null, "rel");
+                                    final String herf = parser.getAttributeValue(
+                                            null, "href");
+                                    if (rel.equals("alternate")) {
+                                        values.put("url",(herf));
+                                    }
+                                }
+                            } else if (tag.equals("description")
+                                    || tag.equals("summary")) {
+                                String buf = parser.nextText();
+                                values.put("image", StripImageTags(buf));
+                                //Log.d("image",currentItem.getImage());
+                                values.put("text",(buf
+                                                .replaceAll(
+                                                        "(<.+?>|\r\n|\n\r|\n|\r|&#....;|&....;|&...;|&..;)",
+                                                        "")));// タグと改行除去
+                            } else if (tag.equals("encoded")) {
+                                values.put("image",StripImageTags(parser
+                                        .nextText()));
+                                //Log.d("image",currentItem.getImage());
+                            }
+                        }
+                        break;
+                    case XmlPullParser.END_TAG:
+                        tag = parser.getName();
+                        if ((tag.equals("item") || tag.equals("entry"))
+                                /*&& removePR(currentItem)*/) {
+                            //list.add(currentItem);
+                            mydb.replace("entry", null, values);
+                        }
+                        break;
+                }
+                eventType = parser.next();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //list.trimToSize();
+        return; //list;
+    }
+
+    private static final String StripImageTags(String str) {
+        final Pattern o = Pattern.compile("<img.*?(jpg|png|images).*?>");
+        final Pattern p = Pattern.compile("http.*?(jpg|png)");
+        final Pattern q = Pattern.compile("//.*?(jpg|png)");
+        final Pattern r = Pattern.compile("//.*?images.*?\"");
+        String matchstr = null;
+        final Matcher mo = o.matcher(str);
+        if (mo.find()) {
+            str = mo.group();
+            final Matcher mp = p.matcher(str);
+            final Matcher mq = q.matcher(str);
+            final Matcher mr = r.matcher(str);
+            if (mp.find()) {
+                matchstr = mp.group();
+            } else if (mq.find()) {
+                matchstr = "http:" + mq.group();
+            } else if (mr.find()) {
+                matchstr = "http:" + mr.group();
+                matchstr = matchstr.substring(0, matchstr.length() - 1);
+            } else {
+                matchstr = null;
+            }
+            return matchstr;
+        }
+        return null;
+
+    }
+
 
     public RequestQueue getRequestQueue() {
         return mQueue;
@@ -223,6 +365,9 @@ public class MainActivity extends Activity {
         return mImageLoader;
     }
 
+    public SQLiteDatabase getDB() {
+        return mydb;
+    }
 
 
     public class SectionsPagerAdapter extends FragmentPagerAdapter {

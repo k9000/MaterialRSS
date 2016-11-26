@@ -2,36 +2,25 @@ package com.trulybluemonochrome.materialrss;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.customtabs.CustomTabsIntent;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
-import android.util.Xml;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 
 import com.etsy.android.grid.StaggeredGridView;
 
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-
-import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 public class PlaceholderFragment extends Fragment implements
@@ -126,11 +115,33 @@ public class PlaceholderFragment extends Fragment implements
             // ImageLoaderをもっているアダプタを設定
             mAdapter = new CardAdapter(getActivity(), R.id.txt_line1);
         }
+        final SQLiteDatabase db = ((MainActivity)getActivity()).getDB();
+        final Cursor c = db.query("entry", null, "page = ?", new String[]{ mURL}, null, null, "date DESC");
+
+        final ArrayList<RssItem> rsslist = new ArrayList<RssItem>();
+        while(c.moveToNext()){
+            RssItem _obj = new RssItem();
+            _obj.setTitle(c.getString(c.getColumnIndex("title")));
+            _obj.setUrl(c.getString(c.getColumnIndex("url")));
+            _obj.setText(c.getString(c.getColumnIndex("text")));
+            _obj.setPage(c.getString(c.getColumnIndex("page")));
+            _obj.setImage(c.getString(c.getColumnIndex("image")));
+            try {
+                _obj.setDate(new SimpleDateFormat("YYYY-MM-DD HH:MM:SS").parse(c.getString(c.getColumnIndex("date"))));
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+            rsslist.add(_obj);
+        }
+        c.close();
+        //db.close();
+
+        mAdapter.addAll(rsslist);
 
         mGridView.setAdapter(mAdapter);
 
 
-        doRequest(mURL);
+        //doRequest(mURL);
     }
 
     @Override
@@ -140,159 +151,6 @@ public class PlaceholderFragment extends Fragment implements
           //      getArguments().getInt(ARG_SECTION_NUMBER));
     }
 
-    public void doRequest(String url) {
-        ((MainActivity)getActivity()).getRequestQueue().add(new XMLRequest(url,
-                new Response.Listener<InputStream>() {
-
-                    @Override
-                    public void onResponse(InputStream in) {
-                        //MyData data =
-                        try {
-                            ArrayList<RssItem> rsslist = parseXml(in);
-                            mAdapter.addAll(rsslist);
-                            mAdapter.sort(new Comparator<RssItem>() {
-                                @Override
-                                public int compare(RssItem lhs, RssItem rhs) {
-                                    if (lhs.getDate() == null)
-                                        return 1;
-                                    else if (rhs.getDate() == null)
-                                        return -1;
-                                    else if (lhs.getDate().before(rhs.getDate()))
-                                        return 1;
-                                    else
-                                        return -1;
-                                }
-                            });
-                            //mAdapter.addAll(rsslist);
-                            mGridView.setAdapter(mAdapter);
-                            in.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (XmlPullParserException e) {
-                            e.printStackTrace();
-                        }
-                        //if (mListener != null) {
-                        //    mListener.onParseXml(data);
-                        //}
-                    }
-                }, new Response.ErrorListener() {
-
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                // error
-            }
-        }));
-
-        //MAINApplication.getRequestQueue().add(request);
-    }
-
-
-    public static final ArrayList<RssItem> parseXml(final InputStream is
-    ) throws IOException,
-            XmlPullParserException {
-        final ArrayList<RssItem> list = new ArrayList<RssItem>();
-        final XmlPullParser parser = Xml.newPullParser();
-        try {
-            parser.setInput(is, null);
-            int eventType = parser.getEventType();
-            RssItem currentItem = null;
-            while (eventType != XmlPullParser.END_DOCUMENT) {
-                String tag = null;
-                switch (eventType) {
-                    case XmlPullParser.START_TAG:
-                        tag = parser.getName();
-                        if (tag.equals("item") || tag.equals("entry")) {
-                            currentItem = new RssItem();
-                            //currentItem.setTag(color);
-                            //currentItem.setPage(page);
-                        } else if (currentItem != null) {
-                            if (tag.equals("title")) {
-                                currentItem.setTitle(parser.nextText().replaceAll(
-                                        "(&#....;|&....;|&...;)", ""));// タグ除去;
-                                Log.d("title", currentItem.getTitle());
-                            } else if (tag.equals("pubDate")) {
-                                currentItem.setDate(new SimpleDateFormat(
-                                        "EEE, dd MMM yyyy HH:mm:ss Z",
-                                        Locale.ENGLISH).parse(parser.nextText()));
-                            } else if (tag.equals("date")
-                                    || tag.equals("published")) {
-                                currentItem.setDate(new SimpleDateFormat(
-                                        "yyyy-MM-dd'T'HH:mm:ss").parse(parser
-                                        .nextText()));
-                            } else if (tag.equals("link")) {
-                                final String link = parser.nextText();
-                                if (link != "") {
-                                    currentItem.setUrl(link);
-                                } else {
-                                    final String rel = parser.getAttributeValue(
-                                            null, "rel");
-                                    final String herf = parser.getAttributeValue(
-                                            null, "href");
-                                    if (rel.equals("alternate")) {
-                                        currentItem.setUrl(herf);
-                                    }
-                                }
-                            } else if (tag.equals("description")
-                                    || tag.equals("summary")) {
-                                String buf = parser.nextText();
-                                currentItem.setImage(StripImageTags(buf));
-                                //Log.d("image",currentItem.getImage());
-                                currentItem
-                                        .setText(buf
-                                                .replaceAll(
-                                                        "(<.+?>|\r\n|\n\r|\n|\r|&#....;|&....;|&...;|&..;)",
-                                                        ""));// タグと改行除去
-                            } else if (tag.equals("encoded")) {
-                                currentItem.setImage(StripImageTags(parser
-                                        .nextText()));
-                                //Log.d("image",currentItem.getImage());
-                            }
-                        }
-                        break;
-                    case XmlPullParser.END_TAG:
-                        tag = parser.getName();
-                        if ((tag.equals("item") || tag.equals("entry"))
-                                /*&& removePR(currentItem)*/) {
-                            list.add(currentItem);
-                        }
-                        break;
-                }
-                eventType = parser.next();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        list.trimToSize();
-        return list;
-    }
-
-    private static final String StripImageTags(String str) {
-        final Pattern o = Pattern.compile("<img.*?(jpg|png|images).*?>");
-        final Pattern p = Pattern.compile("http.*?(jpg|png)");
-        final Pattern q = Pattern.compile("//.*?(jpg|png)");
-        final Pattern r = Pattern.compile("//.*?images.*?\"");
-        String matchstr = null;
-        final Matcher mo = o.matcher(str);
-        if (mo.find()) {
-            str = mo.group();
-            final Matcher mp = p.matcher(str);
-            final Matcher mq = q.matcher(str);
-            final Matcher mr = r.matcher(str);
-            if (mp.find()) {
-                matchstr = mp.group();
-            } else if (mq.find()) {
-                matchstr = "http:" + mq.group();
-            } else if (mr.find()) {
-                matchstr = "http:" + mr.group();
-                matchstr = matchstr.substring(0, matchstr.length() - 1);
-            } else {
-                matchstr = null;
-            }
-            return matchstr;
-        }
-        return null;
-
-    }
 }
 
 
