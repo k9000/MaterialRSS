@@ -33,6 +33,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -91,14 +92,18 @@ public class MainActivity extends Activity {
                 mCusor.close();
                 mCusor = mydb.query("feeds", new String[]{"_id", "category", "title", "url"}, "category = ?", new String[]{foldername}, null, null, "_id DESC");
                 adapter.notifyDataSetChanged();
-                viewPager.setCurrentItem(i1);
+                viewPager.setCurrentItem(i1 + 1);
                 return false;
             }
         });
         expandableList.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
             @Override
             public boolean onGroupClick(ExpandableListView expandableListView, View view, int i, long l) {
-                //Log.d("DEBUG", "heading clicked");
+                final String foldername=cursor.getString(cursor.getColumnIndex("category"));
+                mCusor.close();
+                mCusor = mydb.query("feeds", new String[]{"_id", "category", "title", "url"}, "category = ?", new String[]{foldername}, null, null, "_id DESC");
+                adapter.notifyDataSetChanged();
+                viewPager.setCurrentItem(0);
                 return false;
             }
         });
@@ -334,8 +339,22 @@ public class MainActivity extends Activity {
         @Override
         public Fragment getItem(int position) {
             final Bundle bundle = new Bundle();
-            mCusor.moveToPosition(position);
-            bundle.putString("URL", mCusor.getString(mCusor.getColumnIndex("url")));
+            ArrayList<String> urllist = new ArrayList<String>();
+            if (position == 0){
+                //final int max = mCusor.getCount();
+                boolean next = mCusor.moveToFirst();
+                while(next){//for (int i=0;i<max;i++){
+                    //mCusor.moveToPosition(i);
+                    urllist.add(mCusor.getString(mCusor.getColumnIndex("url")));
+                    next = mCusor.moveToNext();
+                }
+
+            } else {
+                mCusor.moveToPosition(position - 1);
+                urllist.add(mCusor.getString(mCusor.getColumnIndex("url")));
+                //bundle.putString("URL", mCusor.getString(mCusor.getColumnIndex("url")));
+            }
+            bundle.putStringArrayList("URL",urllist);
             final PlaceholderFragment fragment = new PlaceholderFragment();
             fragment.setArguments(bundle);
             return fragment;
@@ -343,13 +362,18 @@ public class MainActivity extends Activity {
 
         @Override
         public int getCount() {
-            return mCusor.getCount();
+            return mCusor.getCount()+1;
         }
 
         @Override
         public CharSequence getPageTitle(int position) {
-            mCusor.moveToPosition(position);
-            return mCusor.getString(mCusor.getColumnIndex("title"));
+            if (position == 0){
+                mCusor.moveToFirst();
+                return mCusor.getString(mCusor.getColumnIndex("category"));
+            } else {
+                mCusor.moveToPosition(position - 1);
+                return mCusor.getString(mCusor.getColumnIndex("title"));
+            }
         }
 
         @Override

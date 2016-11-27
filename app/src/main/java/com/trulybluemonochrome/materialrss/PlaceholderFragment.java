@@ -33,7 +33,7 @@ public class PlaceholderFragment extends Fragment implements
     //private CardAdapter mAdapter;
 
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private String mURL;
+    private ArrayList<String> mURLlist;
 
 
     /**
@@ -64,7 +64,7 @@ public class PlaceholderFragment extends Fragment implements
                 R.color.orange);
         // Listenerをセット
         mSwipeRefreshLayout.setOnRefreshListener(this);
-        mURL = getArguments().getString("URL", null);
+        mURLlist = getArguments().getStringArrayList("URL");
         return rootView;
     }
 
@@ -89,10 +89,14 @@ public class PlaceholderFragment extends Fragment implements
         final RecyclerView recyclerView = (RecyclerView) getView().findViewById(R.id.recycler_view);
 
         final SQLiteDatabase db = ((MainActivity)getActivity()).getDB();
-        final Cursor c = db.query("entry", null, "page = ?", new String[]{ mURL}, null, null, "date DESC");
+        String[] foo = (String[])mURLlist.toArray(new String[0]);
+        //final Cursor c = db.query("entry", null, "page = ? or page = ?", foo, null, null, "date DESC");
+        String[] names = mURLlist.toArray(new String[0]); // do whatever is needed first
+        String query = "SELECT * FROM entry"
+                + " WHERE page IN (" + makePlaceholders(names.length) + ")";
+        final Cursor c = db.rawQuery(query, names);
         final ArrayList<RssItem> rsslist = new ArrayList<RssItem>();
         try {
-
             while(c.moveToNext()) {
                 RssItem _obj = new RssItem();
                 _obj.setTitle(c.getString(c.getColumnIndex("title")));
@@ -132,6 +136,17 @@ public class PlaceholderFragment extends Fragment implements
         };
 
         recyclerView.setAdapter(adapter);
+
+    }
+
+    private String makePlaceholders(int i){
+        String str = "?";
+        if (i>0){
+            for (int j=0;j<i-1;j++){
+                str += ", ?";
+            }
+        }
+        return str;
 
     }
 
