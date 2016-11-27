@@ -1,6 +1,5 @@
 package com.trulybluemonochrome.materialrss;
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -30,8 +29,8 @@ public class PlaceholderFragment extends Fragment implements
      */
     private static final String ARG_SECTION_NUMBER = "section_number";
 
-    private RecyclerView mRecyclerView;
-    private CardAdapter mAdapter;
+    //private RecyclerView mRecyclerView;
+    //private CardAdapter mAdapter;
 
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private String mURL;
@@ -42,8 +41,8 @@ public class PlaceholderFragment extends Fragment implements
      * number.
      */
     public static PlaceholderFragment newInstance(int sectionNumber) {
-        PlaceholderFragment fragment = new PlaceholderFragment();
-        Bundle args = new Bundle();
+        final PlaceholderFragment fragment = new PlaceholderFragment();
+        final Bundle args = new Bundle();
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         fragment.setArguments(args);
         return fragment;
@@ -55,7 +54,7 @@ public class PlaceholderFragment extends Fragment implements
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         // Now give the find the PullToRefreshLayout and set it up
         mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.ptr_layout);
@@ -65,9 +64,7 @@ public class PlaceholderFragment extends Fragment implements
                 R.color.orange);
         // Listenerをセット
         mSwipeRefreshLayout.setOnRefreshListener(this);
-
         mURL = getArguments().getString("URL", null);
-
         return rootView;
     }
 
@@ -89,38 +86,36 @@ public class PlaceholderFragment extends Fragment implements
     public void onActivityCreated(final Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        mRecyclerView = (RecyclerView) getView().findViewById(R.id.recycler_view);
+        final RecyclerView recyclerView = (RecyclerView) getView().findViewById(R.id.recycler_view);
 
-        if (mAdapter == null) {
-            // ImageLoaderをもっているアダプタを設定
-            //mAdapter = new CardAdapter(getActivity(), R.id.txt_line1);
-        }
         final SQLiteDatabase db = ((MainActivity)getActivity()).getDB();
         final Cursor c = db.query("entry", null, "page = ?", new String[]{ mURL}, null, null, "date DESC");
-
         final ArrayList<RssItem> rsslist = new ArrayList<RssItem>();
-        while(c.moveToNext()){
-            RssItem _obj = new RssItem();
-            _obj.setTitle(c.getString(c.getColumnIndex("title")));
-            _obj.setUrl(c.getString(c.getColumnIndex("url")));
-            _obj.setText(c.getString(c.getColumnIndex("text")));
-            _obj.setPage(c.getString(c.getColumnIndex("page")));
-            _obj.setImage(c.getString(c.getColumnIndex("image")));
-            try {
+        try {
+
+            while(c.moveToNext()) {
+                RssItem _obj = new RssItem();
+                _obj.setTitle(c.getString(c.getColumnIndex("title")));
+                _obj.setUrl(c.getString(c.getColumnIndex("url")));
+                _obj.setText(c.getString(c.getColumnIndex("text")));
+                _obj.setPage(c.getString(c.getColumnIndex("page")));
+                _obj.setImage(c.getString(c.getColumnIndex("image")));
                 _obj.setDate(new SimpleDateFormat("yyyy-MM-DD HH:mm:ss", Locale.ENGLISH).parse(c.getString(c.getColumnIndex("date"))));
-            } catch (Exception e){
-                e.printStackTrace();
+                rsslist.add(_obj);
             }
-            rsslist.add(_obj);
+        } catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            c.close();
         }
-        c.close();
+
         //db.close();
 
         //mRecyclerView = (RecyclerView) findViewById(android.R.id.list);
-        mRecyclerView.setHasFixedSize(true);
-        RecyclerView.LayoutManager layoutManager = new StaggeredGridLayoutManager(3, 1);
-        mRecyclerView.setLayoutManager(layoutManager);
-        mAdapter = new CardAdapter(getActivity().getApplicationContext(),rsslist){
+        recyclerView.setHasFixedSize(true);
+        final RecyclerView.LayoutManager layoutManager = new StaggeredGridLayoutManager(3, 1);
+        recyclerView.setLayoutManager(layoutManager);
+        final CardAdapter adapter = new CardAdapter(getActivity().getApplicationContext(),rsslist){
             @Override
             protected void onItemClicked(@NonNull String uri) {
                 super.onItemClicked(uri);
@@ -135,7 +130,7 @@ public class PlaceholderFragment extends Fragment implements
                 tabsIntent.launchUrl(getActivity(), Uri.parse(uri));
             }
         };
-        mRecyclerView.setAdapter(mAdapter);
+        recyclerView.setAdapter(adapter);
 
     }
 

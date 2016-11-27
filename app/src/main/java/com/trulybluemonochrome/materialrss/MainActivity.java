@@ -2,7 +2,6 @@ package com.trulybluemonochrome.materialrss;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -14,15 +13,12 @@ import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.util.Log;
 import android.util.Xml;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v7.widget.Toolbar;
-import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 import android.widget.SimpleCursorTreeAdapter;
 
@@ -35,7 +31,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -45,7 +40,7 @@ public class MainActivity extends Activity {
 
     private MySQLiteOpenHelper hlpr;
     private SQLiteDatabase mydb;
-    private String mFoldername;
+    private Cursor mCusor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,12 +54,13 @@ public class MainActivity extends Activity {
         final DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawerLayout.openDrawer(GravityCompat.START);
         final ExpandableListView expandableList = (ExpandableListView) findViewById(R.id.navigationmenu);
-        final NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        //final NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
 
 
         final Cursor cursor = mydb.query("folder", new String[] {"_id", "category"}, null, null, null, null, "_id DESC");
         cursor.moveToFirst();
-        mFoldername = cursor.getString(cursor.getColumnIndex("category"));
+        final String defaultname = cursor.getString(cursor.getColumnIndex("category"));
+        mCusor = mydb.query("feeds", new String[]{"_id", "category", "title", "url"}, "category = ?", new String[]{defaultname}, null, null, "_id DESC");
 
 
         final SectionsPagerAdapter adapter = new SectionsPagerAdapter(
@@ -89,7 +85,8 @@ public class MainActivity extends Activity {
         expandableList.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
             public boolean onChildClick(ExpandableListView expandableListView, View view, int i, int i1, long l) {
-                mFoldername=cursor.getString(cursor.getColumnIndex("category"));
+                final String foldername=cursor.getString(cursor.getColumnIndex("category"));
+                mCusor = mydb.query("feeds", new String[]{"_id", "category", "title", "url"}, "category = ?", new String[]{foldername}, null, null, "_id DESC");
                 adapter.notifyDataSetChanged();
                 viewPager.setCurrentItem(i1);
                 return false;
@@ -98,7 +95,7 @@ public class MainActivity extends Activity {
         expandableList.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
             @Override
             public boolean onGroupClick(ExpandableListView expandableListView, View view, int i, long l) {
-                Log.d("DEBUG", "heading clicked");
+                //Log.d("DEBUG", "heading clicked");
                 return false;
             }
         });
@@ -124,17 +121,15 @@ public class MainActivity extends Activity {
         final TabLayout tabLayout = (TabLayout) findViewById(R.id.main_tab);
         tabLayout.setupWithViewPager(viewPager);
 
-
-        //mQueue = Volley.newRequestQueue(this);
-        //mImageLoader = new ImageLoader(mQueue, new LruImageCache());
-
         final Cursor feedcursor = mydb.query("feeds", null, null, null, null, null, "_id DESC");
-        //feedcursor.moveToFirst();
-        while(feedcursor.moveToNext()){
-            doRequest(feedcursor.getString(feedcursor.getColumnIndex("url")));
+        try {
+            while(feedcursor.moveToNext()){
+                doRequest(feedcursor.getString(feedcursor.getColumnIndex("url")));
+            }
+        } finally {
+            feedcursor.close();
         }
-        feedcursor.close();
-        //adapter.notifyDataSetChanged();
+
     }
 
     public class MyExpandableListAdapter extends SimpleCursorTreeAdapter {
@@ -313,19 +308,21 @@ public class MainActivity extends Activity {
             return matchstr;
         }
         return null;
-
     }
-
-
 
     public SQLiteDatabase getDB() {
         return mydb;
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mydb.close();
+        mCusor.close();
+    }
+
 
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
-
-        private  Cursor mCusor;
 
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
@@ -334,7 +331,6 @@ public class MainActivity extends Activity {
         @Override
         public Fragment getItem(int position) {
             final Bundle bundle = new Bundle();
-            //mCusor = mydb.query("feeds", new String[]{"_id", "category", "title", "url"}, "category = ?", new String[]{mFoldername}, null, null, "_id DESC");
             mCusor.moveToPosition(position);
             bundle.putString("URL", mCusor.getString(mCusor.getColumnIndex("url")));
             final PlaceholderFragment fragment = new PlaceholderFragment();
@@ -344,14 +340,11 @@ public class MainActivity extends Activity {
 
         @Override
         public int getCount() {
-            //final Cursor cursor = mydb.query("feeds", new String[]{"_id", "category", "title", "url"}, "category = ?", new String[]{mFoldername}, null, null, "_id DESC");
-            mCusor = mydb.query("feeds", new String[]{"_id", "category", "title", "url"}, "category = ?", new String[]{mFoldername}, null, null, "_id DESC");
             return mCusor.getCount();
         }
 
         @Override
         public CharSequence getPageTitle(int position) {
-            //final Cursor cursor = mydb.query("feeds", new String[]{"_id", "category", "title", "url"}, "category = ?", new String[]{mFoldername}, null, null, "_id DESC");
             mCusor.moveToPosition(position);
             return mCusor.getString(mCusor.getColumnIndex("title"));
         }
@@ -361,28 +354,6 @@ public class MainActivity extends Activity {
             return POSITION_NONE;
         }
 
-        public void destroyAllItem(ViewPager pager) {
-            for (int i = 0; i < getCount() - 1; i++) {
-                try {
-                    Object obj = this.instantiateItem(pager, i);
-                    if (obj != null)
-                        destroyItem(pager, i, obj);
-                } catch (Exception e) {
-                }
-            }
-        }
-
-        @Override
-        public void destroyItem(ViewGroup container, int position, Object object) {
-            super.destroyItem(container, position, object);
-
-            if (position <= getCount()) {
-                FragmentManager manager = ((Fragment) object).getFragmentManager();
-                FragmentTransaction trans = manager.beginTransaction();
-                trans.remove((Fragment) object);
-                trans.commit();
-            }
-        }
     }
 
 
