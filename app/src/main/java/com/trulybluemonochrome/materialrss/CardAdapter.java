@@ -2,6 +2,8 @@ package com.trulybluemonochrome.materialrss;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,7 +13,9 @@ import android.widget.Button;
 import android.widget.TextView;
 
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Locale;
 
 
 public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
@@ -20,14 +24,18 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
     public static class ViewHolder extends RecyclerView.ViewHolder{
         public LiteNetworkImageView imageView;
         public TextView txtLineOne;
+        public TextView txtLineTwo;
         public Button btnGo;
         public View contentview;
+        public CardView cardView;
         public ViewHolder(View v) {
             super(v);
             contentview = v;
             imageView = (LiteNetworkImageView)v.findViewById(R.id.image);
             txtLineOne = (TextView) v.findViewById(R.id.txt_line1);
+            txtLineTwo = (TextView) v.findViewById(R.id.txt_line2);
             btnGo = (Button) v.findViewById(R.id.btn_go);
+            cardView = (CardView) v.findViewById(R.id.card);
 
         }
     }
@@ -51,13 +59,13 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
 
 
         mBackgroundColors = new ArrayList<Integer>();
-        mBackgroundColors.add(R.color.blue2);
-        mBackgroundColors.add(R.color.blue6);
-        mBackgroundColors.add(R.color.blue3);
-        mBackgroundColors.add(R.color.blue7);
-        mBackgroundColors.add(R.color.blue4);
-        mBackgroundColors.add(R.color.blue8);
-        mBackgroundColors.add(R.color.blue5);
+        mBackgroundColors.add(ContextCompat.getColor(context,R.color.blue2));
+        mBackgroundColors.add(ContextCompat.getColor(context,R.color.blue6));
+        mBackgroundColors.add(ContextCompat.getColor(context,R.color.blue3));
+        mBackgroundColors.add(ContextCompat.getColor(context,R.color.blue7));
+        mBackgroundColors.add(ContextCompat.getColor(context,R.color.blue4));
+        mBackgroundColors.add(ContextCompat.getColor(context,R.color.blue8));
+        mBackgroundColors.add(ContextCompat.getColor(context,R.color.blue5));
 
     }
 
@@ -104,9 +112,11 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
                 position % mBackgroundColors.size() : position;
 
 
-
         holder.txtLineOne.setText(item.getTitle());//getItem(position) + position);
-        holder.txtLineOne.setBackgroundResource(mBackgroundColors.get(backgroundIndex));
+        final SimpleDateFormat sdf = new SimpleDateFormat("M'/'d k:mm ",
+                Locale.JAPAN);
+        holder.txtLineTwo.setText(sdf.format(item.getDate()));
+        holder.cardView.setCardBackgroundColor(mBackgroundColors.get(backgroundIndex));
 
         final String imageUrl = item.getImage();
 
