@@ -7,17 +7,15 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.customtabs.CustomTabsIntent;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-
-
-import com.etsy.android.grid.StaggeredGridView;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -32,8 +30,8 @@ public class PlaceholderFragment extends Fragment implements
      */
     private static final String ARG_SECTION_NUMBER = "section_number";
 
-    private StaggeredGridView mGridView;
-    private ArrayAdapter mAdapter;
+    private RecyclerView mRecyclerView;
+    private CardAdapter mAdapter;
 
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private String mURL;
@@ -91,30 +89,11 @@ public class PlaceholderFragment extends Fragment implements
     public void onActivityCreated(final Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        mGridView = (StaggeredGridView) getView().findViewById(R.id.grid_view);
-
-        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                final String url = ((RssItem)parent.getItemAtPosition(position)).getUrl();
-                //((MainActivity)getActivity()).openChromeCustomTab(url);
-                final CustomTabsIntent tabsIntent = new CustomTabsIntent.Builder()
-                        .setShowTitle(true)
-                        .setToolbarColor(ContextCompat.getColor(getActivity(), R.color.primary))
-                        .setStartAnimations(getActivity(), R.anim.slide_in_right, R.anim.slide_out_left)
-                        .setExitAnimations(getActivity(), android.R.anim.slide_in_left, android.R.anim.slide_out_right)
-                        .build();
-
-// Chromeの起動
-                tabsIntent.launchUrl(getActivity(), Uri.parse(url));
-            }
-
-        });
-
+        mRecyclerView = (RecyclerView) getView().findViewById(R.id.recycler_view);
 
         if (mAdapter == null) {
             // ImageLoaderをもっているアダプタを設定
-            mAdapter = new CardAdapter(getActivity(), R.id.txt_line1);
+            //mAdapter = new CardAdapter(getActivity(), R.id.txt_line1);
         }
         final SQLiteDatabase db = ((MainActivity)getActivity()).getDB();
         final Cursor c = db.query("entry", null, "page = ?", new String[]{ mURL}, null, null, "date DESC");
@@ -137,20 +116,29 @@ public class PlaceholderFragment extends Fragment implements
         c.close();
         //db.close();
 
-        mAdapter.addAll(rsslist);
+        //mRecyclerView = (RecyclerView) findViewById(android.R.id.list);
+        mRecyclerView.setHasFixedSize(true);
+        RecyclerView.LayoutManager layoutManager = new StaggeredGridLayoutManager(3, 1);
+        mRecyclerView.setLayoutManager(layoutManager);
+        mAdapter = new CardAdapter(getActivity().getApplicationContext(),rsslist){
+            @Override
+            protected void onItemClicked(@NonNull String uri) {
+                super.onItemClicked(uri);
+                final CustomTabsIntent tabsIntent = new CustomTabsIntent.Builder()
+                        .setShowTitle(true)
+                        .setToolbarColor(ContextCompat.getColor(getActivity(), R.color.primary))
+                        .setStartAnimations(getActivity(), R.anim.slide_in_right, R.anim.slide_out_left)
+                        .setExitAnimations(getActivity(), android.R.anim.slide_in_left, android.R.anim.slide_out_right)
+                        .build();
 
-        mGridView.setAdapter(mAdapter);
+                // Chromeの起動
+                tabsIntent.launchUrl(getActivity(), Uri.parse(uri));
+            }
+        };
+        mRecyclerView.setAdapter(mAdapter);
 
-
-        //doRequest(mURL);
     }
 
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        //((MainActivity) activity).onSectionAttached(
-          //      getArguments().getInt(ARG_SECTION_NUMBER));
-    }
 
 }
 

@@ -1,44 +1,51 @@
 package com.trulybluemonochrome.materialrss;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 
-//import com.android.volley.toolbox.NetworkImageView;
-
 import java.util.ArrayList;
 
-public class CardAdapter extends ArrayAdapter<RssItem> {
+public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
 
-    static class ViewHolder {
-        LiteNetworkImageView imageView;
-        TextView txtLineOne;
-        Button btnGo;
+    public static class ViewHolder extends RecyclerView.ViewHolder{
+        public LiteNetworkImageView imageView;
+        public TextView txtLineOne;
+        public Button btnGo;
+        public View contentview;
+        public ViewHolder(View v) {
+            super(v);
+            contentview = v;
+            imageView = (LiteNetworkImageView)v.findViewById(R.id.image);
+            txtLineOne = (TextView) v.findViewById(R.id.txt_line1);
+            btnGo = (Button) v.findViewById(R.id.btn_go);
+
+        }
     }
 
     private final LayoutInflater mLayoutInflater;
-    //private final Random mRandom;
     private final ArrayList<Integer> mBackgroundColors;
-    //private final RssItem mRssItem;
-    //private final ImageLoader mImageLoader;
+    private final ArrayList<RssItem> mDataSet;
+    private Context mContext;
 
-    //private static final SparseArray<Double> sPositionHeightRatios = new SparseArray<Double>();
+    // タップされたときに呼び出されるメソッドを定義
+    protected void onItemClicked(@NonNull String uri) {
+    }
+
+    public CardAdapter(final Context context, final ArrayList<RssItem> myDataSet) {
+        //super(context, textViewResourceId);
+        //mLayoutInflater = LayoutInflater.from(context);
+        mContext = context;
+        mDataSet = myDataSet;
+        mLayoutInflater = (LayoutInflater) context
+                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 
-    public CardAdapter(final Context context, final int textViewResourceId) {
-        super(context, textViewResourceId);
-        mLayoutInflater = LayoutInflater.from(context);
-
-
-        //mImageLoader = new ImageLoader(MAINApplication.getRequestQueue(), new LruImageCache());
-
-        //mRssItem = rssItem;
-
-        //mRandom = new Random();
         mBackgroundColors = new ArrayList<Integer>();
         mBackgroundColors.add(R.color.blue2);
         mBackgroundColors.add(R.color.blue6);
@@ -51,50 +58,46 @@ public class CardAdapter extends ArrayAdapter<RssItem> {
     }
 
     @Override
-    public View getView(final int position, View convertView, final ViewGroup parent) {
-        ViewHolder vh;
-        if (convertView == null) {
-            convertView = mLayoutInflater.inflate(R.layout.list_item, parent, false);
-            vh = new ViewHolder();
-            vh.imageView = (LiteNetworkImageView)convertView.findViewById(R.id.image);
-            vh.txtLineOne = (TextView) convertView.findViewById(R.id.txt_line1);
-            vh.btnGo = (Button) convertView.findViewById(R.id.btn_go);
+    public CardAdapter.ViewHolder onCreateViewHolder(final ViewGroup viewGroup, final int viewType) {
+        // Create a new view.
+        final View v = mLayoutInflater.inflate(R.layout.list_item, viewGroup, false);
+        // you can also set view size here. like this
+        // ViewGroup.LayoutParams params = v.getLayoutParams();
+        // params.height = view_size;
+        // v.setLayoutParams(params);
+        final CardAdapter.ViewHolder holder = new CardAdapter.ViewHolder(v);
+        holder.contentview.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final int position = holder.getAdapterPosition();
+                final String uri = mDataSet.get(position).getUrl();
+                onItemClicked(uri);
+            }
+        });
+        return holder;
+    }
 
-            convertView.setTag(vh);
-        }
-        else {
-            vh = (ViewHolder) convertView.getTag();
-        }
+    @Override
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
+        // attach data to covertView
+        final RssItem item = mDataSet.get(position);
 
-        //final double positionHeight = getPositionRatio(position);
+        //holder.imageview.setImageResource(item.img_id);
         final int backgroundIndex = position >= mBackgroundColors.size() ?
                 position % mBackgroundColors.size() : position;
 
 
 
-        vh.txtLineOne.setText(getItem(position).getTitle());//getItem(position) + position);
-        vh.txtLineOne.setBackgroundResource(mBackgroundColors.get(backgroundIndex));
+        holder.txtLineOne.setText(item.getTitle());//getItem(position) + position);
+        holder.txtLineOne.setBackgroundResource(mBackgroundColors.get(backgroundIndex));
 
-        final String imageUrl = getItem(position).getImage();
-        vh.imageView.setImageUrl(imageUrl, ((MainActivity)getContext()).getImageLoader());
-
-        return convertView;
-    }
-/*
-    private double getPositionRatio(final int position) {
-        double ratio = sPositionHeightRatios.get(position, 0.0);
-        // if not yet done generate and stash the columns height
-        // in our real world scenario this will be determined by
-        // some match based on the known height and width of the image
-        // and maybe a helpful way to get the column height!
-        if (ratio == 0) {
-            ratio = getRandomHeightRatio();
-            sPositionHeightRatios.append(position, ratio);
-        }
-        return ratio;
+        final String imageUrl = item.getImage();
+        holder.imageView.setImageUrl(imageUrl, MySingleton.getInstance(mContext).getImageLoader());
     }
 
-    private double getRandomHeightRatio() {
-        return (mRandom.nextDouble() / 2.0) + 1.0; // height will be 1.0 - 1.5 the width
-    }*/
+    @Override
+    public int getItemCount() {
+        return mDataSet.size();
+    }
+
 }

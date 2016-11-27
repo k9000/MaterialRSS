@@ -26,11 +26,8 @@ import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 import android.widget.SimpleCursorTreeAdapter;
 
-import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.ImageLoader;
-import com.android.volley.toolbox.Volley;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -46,8 +43,6 @@ import java.util.regex.Pattern;
 
 public class MainActivity extends Activity {
 
-    private RequestQueue mQueue;
-    private ImageLoader mImageLoader;
     private MySQLiteOpenHelper hlpr;
     private SQLiteDatabase mydb;
     private String mFoldername;
@@ -130,8 +125,8 @@ public class MainActivity extends Activity {
         tabLayout.setupWithViewPager(viewPager);
 
 
-        mQueue = Volley.newRequestQueue(this);
-        mImageLoader = new ImageLoader(mQueue, new LruImageCache());
+        //mQueue = Volley.newRequestQueue(this);
+        //mImageLoader = new ImageLoader(mQueue, new LruImageCache());
 
         final Cursor feedcursor = mydb.query("feeds", null, null, null, null, null, "_id DESC");
         //feedcursor.moveToFirst();
@@ -181,50 +176,15 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (mQueue == null) {
-            mQueue.stop();
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (mQueue == null) {
-            mQueue.start();
-        }
-    }
 
     public void doRequest(final String url) {
-        mQueue.add(new XMLRequest(url,
+        MySingleton.getInstance(this.getApplicationContext()).
+                getRequestQueue().add(new XMLRequest(url,
                 new Response.Listener<InputStream>() {
                     @Override
                     public void onResponse(InputStream in) {
                         try {
                             parseXml(in, url);
-/*
-
-                            mAdapter.addAll(rsslist);
-                            mAdapter.sort(new Comparator<RssItem>() {
-                                @Override
-                                public int compare(RssItem lhs, RssItem rhs) {
-                                    if (lhs.getDate() == null)
-                                        return 1;
-                                    else if (rhs.getDate() == null)
-                                        return -1;
-                                    else if (lhs.getDate().before(rhs.getDate()))
-                                        return 1;
-                                    else
-                                        return -1;
-                                }
-                            });
-                            //mAdapter.addAll(rsslist);
-                            mGridView.setAdapter(mAdapter);
-
-*/
-
 
                             in.close();
                         } catch (IOException e) {
@@ -357,13 +317,6 @@ public class MainActivity extends Activity {
     }
 
 
-    public RequestQueue getRequestQueue() {
-        return mQueue;
-    }
-
-    public ImageLoader getImageLoader() {
-        return mImageLoader;
-    }
 
     public SQLiteDatabase getDB() {
         return mydb;

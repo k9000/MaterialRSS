@@ -55,7 +55,7 @@ public class EntryActivity extends Activity implements View.OnClickListener {
     private boolean mPass = false;
     private boolean noti = true;
 
-    private RequestQueue mQueue;
+    //private RequestQueue mQueue;
 
     int selectColor = 0xff00aeef;
 
@@ -85,6 +85,7 @@ public class EntryActivity extends Activity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_entry);
+        /*
         mQueue = Volley.newRequestQueue(this, new HurlStack(){
             @Override
             public HttpResponse performRequest(Request<?> request, Map<String, String> additionalHeaders)
@@ -95,7 +96,7 @@ public class EntryActivity extends Activity implements View.OnClickListener {
                 final HttpResponse response = super.performRequest(request, newHeaders);
                 return response;
             }
-        });
+        });*/
 
         // レイアウトID登録
         mLoginStatusView = findViewById(R.id.login_status);
@@ -205,7 +206,8 @@ public class EntryActivity extends Activity implements View.OnClickListener {
 
     String mResult;
     public void doRequest(String url) {
-        mQueue.add(new XMLRequest(url,
+        MySingleton.getInstance(this.getApplicationContext()).
+                getRequestQueue().add(new XMLRequest(url,
                 new Response.Listener<InputStream>() {
 
                     @Override
@@ -488,7 +490,7 @@ public class EntryActivity extends Activity implements View.OnClickListener {
 
     }
 
-
+/*
     @Override
     protected void onPause() {
         super.onPause();
@@ -505,7 +507,7 @@ public class EntryActivity extends Activity implements View.OnClickListener {
         }
     }
 
-
+*/
 
 
 }
