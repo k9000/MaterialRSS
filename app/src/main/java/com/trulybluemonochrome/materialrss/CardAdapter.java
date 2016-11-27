@@ -6,12 +6,16 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.TextView;
 
+
 import java.util.ArrayList;
 
+
 public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
+
 
     public static class ViewHolder extends RecyclerView.ViewHolder{
         public LiteNetworkImageView imageView;
@@ -74,6 +78,19 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
                 onItemClicked(uri);
             }
         });
+        //Log.d("image","onCreateViewHolder");
+        final ViewTreeObserver observer = holder.contentview.getViewTreeObserver();
+        observer.addOnGlobalLayoutListener(
+                new ViewTreeObserver.OnGlobalLayoutListener()
+                {
+                    @Override
+                    public void onGlobalLayout()
+                    {
+                        MySingleton.getInstance(mContext).imageViewWidth = holder.imageView.getWidth();
+                        holder.contentview.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    }
+                });
+
         return holder;
     }
 
@@ -92,7 +109,9 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
         holder.txtLineOne.setBackgroundResource(mBackgroundColors.get(backgroundIndex));
 
         final String imageUrl = item.getImage();
-        holder.imageView.setImageUrl(imageUrl, MySingleton.getInstance(mContext).getImageLoader());
+
+        holder.imageView.setImageUrl(imageUrl, MySingleton.getInstance(mContext).getImageLoader(), MySingleton.getInstance(mContext).imageViewWidth);
+
     }
 
     @Override

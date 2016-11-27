@@ -2,6 +2,7 @@ package com.trulybluemonochrome.materialrss;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -19,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.support.v4.view.GravityCompat;
 import android.support.v7.widget.Toolbar;
+import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 import android.widget.SimpleCursorTreeAdapter;
 
@@ -86,6 +88,7 @@ public class MainActivity extends Activity {
             @Override
             public boolean onChildClick(ExpandableListView expandableListView, View view, int i, int i1, long l) {
                 final String foldername=cursor.getString(cursor.getColumnIndex("category"));
+                mCusor.close();
                 mCusor = mydb.query("feeds", new String[]{"_id", "category", "title", "url"}, "category = ?", new String[]{foldername}, null, null, "_id DESC");
                 adapter.notifyDataSetChanged();
                 viewPager.setCurrentItem(i1);
@@ -352,6 +355,29 @@ public class MainActivity extends Activity {
         @Override
         public int getItemPosition(Object object) {
             return POSITION_NONE;
+        }
+
+        public void destroyAllItem(ViewPager pager) {
+            for (int i = 0; i < getCount() - 1; i++) {
+                try {
+                    Object obj = this.instantiateItem(pager, i);
+                    if (obj != null)
+                        destroyItem(pager, i, obj);
+                } catch (Exception e) {
+                }
+            }
+        }
+
+        @Override
+        public void destroyItem(ViewGroup container, int position, Object object) {
+            super.destroyItem(container, position, object);
+
+            if (position <= getCount()) {
+                FragmentManager manager = ((Fragment) object).getFragmentManager();
+                FragmentTransaction trans = manager.beginTransaction();
+                trans.remove((Fragment) object);
+                trans.commit();
+            }
         }
 
     }

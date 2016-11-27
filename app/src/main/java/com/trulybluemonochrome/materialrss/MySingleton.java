@@ -23,6 +23,7 @@ public class MySingleton {
     private RequestQueue mRequestQueue;
     private ImageLoader mImageLoader;
     private static Context mCtx;
+    public int imageViewWidth;
 
     private MySingleton(Context context) {
         mCtx = context;
@@ -30,8 +31,10 @@ public class MySingleton {
 
         mImageLoader = new ImageLoader(mRequestQueue,
                 new ImageLoader.ImageCache() {
+                    final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
+                    final int cacheSize = maxMemory / 8;       // 最大メモリに依存した実装
                     private final LruCache<String, Bitmap>
-                            cache = new LruCache<String, Bitmap>(20);
+                            cache = new LruCache<String, Bitmap>(cacheSize);
 
                     @Override
                     public Bitmap getBitmap(String url) {

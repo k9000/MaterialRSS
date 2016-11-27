@@ -130,6 +130,7 @@ public class PlaceholderFragment extends Fragment implements
                 tabsIntent.launchUrl(getActivity(), Uri.parse(uri));
             }
         };
+
         recyclerView.setAdapter(adapter);
 
     }
