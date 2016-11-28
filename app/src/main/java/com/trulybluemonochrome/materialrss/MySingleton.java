@@ -2,18 +2,27 @@ package com.trulybluemonochrome.materialrss;
 
 
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.util.LruCache;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.Network;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.BasicNetwork;
+import com.android.volley.toolbox.DiskBasedCache;
+import com.android.volley.toolbox.HttpClientStack;
+import com.android.volley.toolbox.HttpStack;
 import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
 
 import org.apache.http.HttpResponse;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +33,7 @@ public class MySingleton {
     private ImageLoader mImageLoader;
     private static Context mCtx;
     public int imageViewWidth;
+    private static final String DEFAULT_CACHE_DIR = "volley";
 
     private MySingleton(Context context) {
         mCtx = context;
@@ -59,7 +69,7 @@ public class MySingleton {
         if (mRequestQueue == null) {
             // getApplicationContext() is key, it keeps you from leaking the
             // Activity or BroadcastReceiver if someone passes one in.
-            mRequestQueue = Volley.newRequestQueue(mCtx.getApplicationContext(), new HurlStack(){
+            mRequestQueue = newRequestQueue(mCtx.getApplicationContext(),128 * 1024 * 1024, new HurlStack(){
                 @Override
                 public HttpResponse performRequest(Request<?> request, Map<String, String> additionalHeaders)
                         throws IOException, AuthFailureError {
@@ -73,6 +83,14 @@ public class MySingleton {
             //mRequestQueue = Volley.newRequestQueue(mCtx.getApplicationContext());
         }
         return mRequestQueue;
+    }
+
+    public static RequestQueue newRequestQueue(Context context, int cacheSize, HttpStack stack) {
+        final File cacheDir = new File(context.getCacheDir(), DEFAULT_CACHE_DIR);
+        final Network network = new BasicNetwork(stack);
+        final RequestQueue queue = new RequestQueue(new DiskBasedCache(cacheDir, cacheSize), network);
+        queue.start();
+        return queue;
     }
 
     public <T> void addToRequestQueue(Request<T> req) {

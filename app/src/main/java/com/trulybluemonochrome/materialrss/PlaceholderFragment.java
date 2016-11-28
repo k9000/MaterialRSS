@@ -89,11 +89,10 @@ public class PlaceholderFragment extends Fragment implements
         final RecyclerView recyclerView = (RecyclerView) getView().findViewById(R.id.recycler_view);
 
         final SQLiteDatabase db = ((MainActivity)getActivity()).getDB();
-        String[] foo = (String[])mURLlist.toArray(new String[0]);
         //final Cursor c = db.query("entry", null, "page = ? or page = ?", foo, null, null, "date DESC");
-        String[] names = mURLlist.toArray(new String[0]); // do whatever is needed first
-        String query = "SELECT * FROM entry"
-                + " WHERE page IN (" + makePlaceholders(names.length) + ")";
+        final String[] names = mURLlist.toArray(new String[0]); // do whatever is needed first
+        final String query = "SELECT * FROM entry"
+                + " WHERE page IN (" + makePlaceholders(names.length) + ") ORDER BY date DESC";
         final Cursor c = db.rawQuery(query, names);
         final ArrayList<RssItem> rsslist = new ArrayList<RssItem>();
         try {
